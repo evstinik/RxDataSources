@@ -23,6 +23,9 @@ open class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelType>
 
     /// Animation configuration for data source
     public var animationConfiguration: AnimationConfiguration
+    
+    /// Animation completion callback
+    public var animationCompletion: (() -> Void)?
 
     /// Calculates view transition depending on type of changes
     public var decideViewTransition: DecideViewTransition
@@ -99,11 +102,13 @@ open class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelType>
 
                         switch self.decideViewTransition(self, tableView, differences) {
                         case .animated:
+                            CATransaction.begin()
+                            CATransaction.setCompletionBlock(self.animationCompletion)
                             for difference in differences {
                                 dataSource.setSections(difference.finalSections)
-
                                 tableView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
                             }
+                            CATransaction.commit()
                         case .reload:
                             self.setSections(newSections)
                             tableView.reloadData()
